@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="wylkerd santos" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>Chat do WYLKERD by Rocketseat</title>
+    <!-- adicionando jquery por cdn -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- adicionando socket.io por cdn -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <!-- chamando estilo CSS -->
+    <link rel="stylesheet" href="styles.css" >
+
+</head>
+
+<body>
+    
+    <img src="logo2.png" class="logo" alt="logo">
+      
+    <form id="chat">
+        <input type="text" name="username" placeholder="Digite seu nome de usuário">
+        <div class="messages"></div>
+        <!--div que conterá todas mensagem enviadas pelos usuários-->
+        <input type="text" name="message" placeholder="Digite sua mensagem">        
+        <button type="submit">Enviar</button>
+        
+    </form>
+
+    <script type="text/javascript">
+        //conectando com o socket do backend 
+        var socket = io('http://localhost:3000');
+
+        // renderizando as mensagens no visor da conversa utilizando jquery
+        function renderMessage(message) {
+            $('.messages').append('<div class= "message"><strong>' + message.author + '</strong>: ' + message.message + ' </div>');
+        }
+        // ouvindo previousMessages que está no backend
+        socket.on('previousMessages', function (messages) {
+            for (message of messages) { 
+                //percorrendo cada uma das mensagens para guardar no array backend
+                renderMessage(message);
+            }
+        });
+
+        // ouvindo received message que está no backend
+        socket.on('receivedMessage', function (message) {
+            renderMessage(message);
+        });
+
+        // verificando quando o chat é submitado / .submi é o form
+        $('#chat').submit(function (event) {
+            event.preventDefault(); //para não enviar esse formulario / por padrão no javascript
+
+            var author = $('input[name=username]').val();
+            var message = $('input[name=message]').val();
+
+            // se tiver alguma coisa digitada... criar e enviar objeto por websocket
+            if (author.length && message.length) {
+                var messageObject = {
+                    author: author,
+                    message: message
+                };
+
+                //chamando o rendermessage assim que é feito o envio 
+                renderMessage(messageObject);
+                //enviando para o socket.. nome do evento = sendmessage
+                socket.emit('sendMessage', messageObject);
+            }
+        });
+    </script>
+</body>
+
+</html>
